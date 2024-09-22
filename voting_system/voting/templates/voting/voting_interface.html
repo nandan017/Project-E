@@ -1,0 +1,50 @@
+{% extends 'voting/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="text-center my-4">Vote for Your Candidate</h2>
+    <form method="POST" action="{% url 'voting_interface' %}">
+        {% csrf_token %}
+        <div class="form-group mb-3">
+            <label for="student_id" class="form-label">Student ID</label>
+            <input type="text" class="form-control" id="student_id" name="student_id" value="{{qr_code}}" disabled>
+            <input type="hidden" name="qr_code" value="{{ qr_code }}">
+        </div>
+        
+        <div class="row">
+            {% for candidate in candidates %}
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="{{ candidate.image.url }}" class="card-img-top" alt="{{ candidate.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ candidate.name }}</h5>
+                        <p class="card-text">{{ candidate.forum }}</p>
+                        <div class="form-check" style="display: inline-block; margin-right: 10px;">
+                            <input class="form-check-input" type="radio" name="candidate_id" id="candidate_{{ candidate.pk }}" value="{{ candidate.pk }}" required>
+                            <label class="form-check-label" for="candidate_{{ candidate.pk }}">
+                                Vote for {{ candidate.name }}
+                            </label>
+                        </div>                                                
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Submit Vote</button>
+    </form>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .form-check-input {
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}

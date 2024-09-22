@@ -1,0 +1,84 @@
+{% extends 'voting/base.html' %} {% block content %}
+<div class="container">
+  <h2 class="text-center">QR Code Scanner</h2>
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <video id="video" width="100%" autoplay class="border"></video>
+      <canvas id="canvas" class="d-none"></canvas>
+      <button id="scan-btn" class="btn btn-primary mt-3">Scan QR Code</button>
+    </div>
+  </div>
+    <!-- Form for manual QR code entry -->
+    <div class="row justify-content-center mt-4">
+      <div class="col-md-6">
+        <form method="POST" action="{% url 'manual_qr_submit' %}">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="manual_qr">Enter QR Code Manually:</label>
+            <input type="text" id="manual_qr" name="manual_qr" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-secondary mt-2">Submit QR Code</button>
+        </form>
+      </div>
+    </div>
+  <div id="result" class="text-center mt-3"></div>
+</div>
+
+<script>
+  console.log("Hello from the QR scanner page!");
+  // Access the webcam stream
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const result = document.getElementById("result");
+
+  // Start the camera stream
+  navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+    video.srcObject = stream;
+    startFrameCapture();
+    console.log("captured") // Start capturing frames
+  });
+
+  // Capture and send frames to the server at regular intervals
+  function startFrameCapture() {
+    setInterval(() => {
+      const frame = captureFrame();
+      sendFrameToServer(frame);
+    }, 10000); // Send a frame every second (adjust as needed)
+  }
+
+  // Capture the current frame from the video
+  function captureFrame() {
+    const context = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
+  }
+
+  // Send the frame to the server for QR code scanning
+  function sendFrameToServer(frame) {
+    console.log("Sending frame to server...");
+    fetch("{% url 'scan_qr' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: JSON.stringify({ image: frame }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        if (data.status === "success") {
+          result.innerHTML = `<p class="text-success">QR Code Data: ${data.qr_data}</p>`;
+        } else {
+          result.innerHTML = `<p class="text-danger">${data.message}</p>`;
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+</script>
+
+{% endblock %}

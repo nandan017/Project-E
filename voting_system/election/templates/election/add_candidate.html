@@ -1,0 +1,23 @@
+{% extends 'voting/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Add New Candidate</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" class="form-control" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="forum">Forum:</label>
+            <input type="text" class="form-control" name="forum" required>
+        </div>
+        <div class="form-group">
+            <label for="image">Candidate Image:</label>
+            <input type="file" class="form-control" name="image" accept="image/*" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Add Candidate</button>
+    </form>
+</div>
+{% endblock %}

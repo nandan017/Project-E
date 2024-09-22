@@ -1,0 +1,58 @@
+{% extends 'voting/base.html' %}
+{% block extra_css %}
+<style>
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    table {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Election Dashboard</h1>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Votes</h5>
+                    <p class="card-text">{{ total_votes }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Candidates</h5>
+                    <p class="card-text">{{ total_candidates }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="mt-4">Vote Count per Candidate</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Candidate</th>
+                <th>Vote Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for candidate, count in candidate_votes.items %}
+            <tr>
+                <td>{{ candidate.name }} ({{ candidate.forum }})</td>
+                <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <!-- Inside your dashboard.html -->
+<button class="btn btn-success mt-3" onclick="window.location.href='{% url 'add_candidate' %}'">Add Candidate</button>
+
+</div>
+{% endblock %}
