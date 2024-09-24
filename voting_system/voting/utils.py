@@ -5,32 +5,34 @@ import cv2
 import numpy as np
 from pyzbar.pyzbar import decode
 import datetime
+from io import BytesIO
+from PIL import Image
 
-def decode_qr_code_from_frame(frame_data):
+import base64
+from io import BytesIO
+from PIL import Image
+from pyzbar.pyzbar import decode
+
+def decode_qr_code_from_frame(base64_image):
     try:
-        # Remove 'data:image/jpeg;base64,' prefix from frame data
-        frame_data = frame_data.split(',')[1]
+        # Decode the base64 string
+        image_data = base64.b64decode(base64_image)
 
-        # Decode the base64-encoded image
-        img_bytes = base64.b64decode(frame_data)
-        img_array = np.frombuffer(img_bytes, np.uint8)
+        # Create a PIL Image object from the bytes
+        image = Image.open(BytesIO(image_data))
 
-        # Convert to OpenCV image format
-        img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        # Use pyzbar to decode the QR code from the image
+        decoded_objects = decode(image)
 
-        # Process the image to detect QR codes
-        qr_codes = decode(img)
-        if qr_codes:
-            for qr_code in qr_codes:
-                qr_code_data = qr_code.data.decode('utf-8')
-                print("Decoded QR Code:", qr_code_data)
-                if is_valid_student_qr(qr_code_data):
-                    return qr_code_data  # Return the decoded QR code data
-
+        if decoded_objects:
+            qr_code_data = decoded_objects[0].data.decode('utf-8')
+            return qr_code_data
+        else:
+            print("No QR code found.")
+            return None
     except Exception as e:
-        print("Error decoding QR code:", e)
-
-    return None  # If no valid QR code is found or error occurs
+        print("Error during QR code decoding:", e)
+        return None
 
 def is_valid_student_qr(qr_code_data):
     """Validate the student QR code format."""

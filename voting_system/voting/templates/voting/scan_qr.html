@@ -17,7 +17,7 @@
             <label for="manual_qr">Enter QR Code Manually:</label>
             <input type="text" id="manual_qr" name="manual_qr" class="form-control" required>
           </div>
-          <button type="submit" class="btn btn-secondary mt-2">Submit QR Code</button>
+          <button type="submit" id="submitButton" class="btn btn-secondary mt-2">Submit QR Code</button>
         </form>
       </div>
     </div>
@@ -58,12 +58,15 @@
   // Send the frame to the server for QR code scanning
   function sendFrameToServer(frame) {
     console.log("Sending frame to server...");
+    console.log("Captured frame data (first 100 chars):", frame.slice(0, 100));
     fetch("{% url 'scan_qr' %}", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": "{{ csrf_token }}",
       },
+
+
       body: JSON.stringify({ image: frame }),
     })
       .then((response) => response.json())
@@ -71,6 +74,10 @@
         console.log(data);
         if (data.status === "success") {
           result.innerHTML = `<p class="text-success">QR Code Data: ${data.qr_data}</p>`;
+          document.getElementById('manual_qr').value = data.qr_data;
+
+          // Automatically click the submit button
+          document.getElementById('submitButton').click();
         } else {
           result.innerHTML = `<p class="text-danger">${data.message}</p>`;
         }

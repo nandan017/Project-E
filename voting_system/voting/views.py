@@ -6,39 +6,66 @@ from .utils import decode_qr_code_from_frame, is_valid_student_qr  # Import the 
 import json
 from django.urls import reverse
 
+import json
+from django.http import JsonResponse
+from django.shortcuts import render
+import base64
+
+# Assume decode_qr_code_from_frame is already imported
+
 def scan_qr(request):
     if request.method == 'POST':
-        # Log the incoming POST data to check if frames are correctly received
-        print("Request body size:", len(request.body))  # To check the size of incoming data
-
-        # Parse the JSON request to get the frame data
         try:
+            print("Request body size:", len(request.body))
             data = json.loads(request.body)
-            frame_data = data.get('frame')
+            frame_data = data.get('image')
 
-            if frame_data:
-                # Use the utility function to decode the QR code from the frame
-                qr_code_data = decode_qr_code_from_frame(frame_data)
-                print("QR Code Data:", qr_code_data)  # Log QR code data for debugging
+            if not frame_data:
+                print("Error: No frame data received.")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'No frame data provided.'
+                })
 
-                if qr_code_data:
+            print("Received frame data size:", len(frame_data))
+            print("Frame data (first 100 chars):", frame_data[:100])
+            print("Frame data (last 100 chars):", frame_data[-100:])
+
+            # Split the base64 data to remove the prefix if present
+            if frame_data.startswith('data:image/png;base64,'):
+                frame_data = frame_data.split(',', 1)[1]
+
+            qr_code_data = decode_qr_code_from_frame(frame_data)
+
+            if qr_code_data:
+                if is_valid_student_qr(qr_code_data):
                     return JsonResponse({
                         'status': 'success',
                         'message': 'Voter verified. Proceed to vote.',
                         'qr_data': qr_code_data
                     })
                 else:
+                    print("Error: Invalid QR code.")
                     return JsonResponse({
                         'status': 'error',
                         'message': 'Invalid QR code. Please try again.'
                     })
             else:
+                print("Error: No QR code found.")
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'No frame data provided.'
+                    'message': 'No QR code found in the image.'
                 })
 
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON format.")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON format.'
+            })
+
         except Exception as e:
+            print("Error processing request:", e)
             return JsonResponse({
                 'status': 'error',
                 'message': f"Error processing the frame: {str(e)}"

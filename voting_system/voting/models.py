@@ -5,7 +5,7 @@ from election.models import Candidate
 
 class Vote(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
-    student_id = models.CharField(max_length=50)
+    student_id = models.CharField(max_length=50, unique=True)
     
     # Use the unique key as the ForeignKey reference
     candidate = models.ForeignKey(Candidate, to_field='candidate_key', on_delete=models.CASCADE)
