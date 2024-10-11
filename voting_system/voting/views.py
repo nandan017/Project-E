@@ -6,11 +6,6 @@ from .utils import decode_qr_code_from_frame, is_valid_student_qr  # Import the 
 import json
 from django.urls import reverse
 
-import json
-from django.http import JsonResponse
-from django.shortcuts import render
-import base64
-
 # Assume decode_qr_code_from_frame is already imported
 
 def scan_qr(request):
