@@ -4,7 +4,7 @@ from django.db import models
 from election.models import Candidate
 
 class Vote(models.Model):
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=False)
     student_id = models.CharField(max_length=50, unique=True)
     
     # Use the unique key as the ForeignKey reference

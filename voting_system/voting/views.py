@@ -1,10 +1,14 @@
 # voting/views.py
 
-from django.http import JsonResponse, HttpResponseRedirect
-from django.shortcuts import render
-from .utils import decode_qr_code_from_frame, is_valid_student_qr  # Import the utility function
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from .utils import decode_qr_code_from_frame, is_valid_student_qr 
 import json
 from django.urls import reverse
+from election.models import Candidate
+from .models import Vote
+import hashlib
+import datetime
 
 # Assume decode_qr_code_from_frame is already imported
 
@@ -82,15 +86,6 @@ def manual_qr_submit(request):
             })
     return render(request, 'voting/scan_qr.html')
 
-# voting/views.py
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse
-from election.models import Candidate
-from .models import Vote
-import hashlib
-import datetime
-
 def voting_interface(request):
     # Fetch all candidates to display them on the page
     candidates = Candidate.objects.all()
@@ -99,22 +94,21 @@ def voting_interface(request):
     if request.method == 'POST':
         candidate_id = request.POST.get('candidate_id')
         student_id = request.POST.get('qr_code')
-        print(qr_code)
-        print(student_id)
 
         # Validate that the candidate exists
-        candidate = get_object_or_404(Candidate, pk=candidate_id)
-
+        candidate = get_object_or_404(Candidate, candidate_key=candidate_id)
+        print("Selected candidate:", candidate)
         # Create a vote instance
         previous_hash = Vote.objects.last().hash if Vote.objects.exists() else "0"  # Using the last vote's hash or "0"
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
         # Combine student_id, candidate, and timestamp to create a unique hash
-        vote_data = f'{student_id}{candidate_id}{timestamp}{previous_hash}'.encode()
+        vote_data = f'{student_id}{candidate_id}{timestamp}{previous_hash}'.encode('utf-8')
+        print("Vote data:", vote_data)
         vote_hash = hashlib.sha256(vote_data).hexdigest()
-
+        print("Vote hash:", vote_hash)
         # Save the vote in the database
         vote = Vote(
+            timestamp=timestamp,
             student_id=student_id,
             candidate=candidate,
             previous_hash=previous_hash,

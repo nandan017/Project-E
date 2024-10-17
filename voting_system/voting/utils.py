@@ -8,10 +8,6 @@ import datetime
 from io import BytesIO
 from PIL import Image
 
-import base64
-from io import BytesIO
-from PIL import Image
-from pyzbar.pyzbar import decode
 
 def decode_qr_code_from_frame(base64_image):
     try:
@@ -37,8 +33,8 @@ def decode_qr_code_from_frame(base64_image):
 def is_valid_student_qr(qr_code_data):
     """Validate the student QR code format."""
     current_year = datetime.datetime.now().year % 100  # Get the last two digits of the current year
-    if len(qr_code_data) == 7 and qr_code_data[:2].isdigit() and qr_code_data[2:4].isalpha() and qr_code_data[4:].isdigit():
+    if len(qr_code_data) == 7 and qr_code_data[:2].isdigit() and qr_code_data[2:4].isalnum() and qr_code_data[4:].isdigit():
         year = int(qr_code_data[:2])  # Extract the two-digit year
-        if current_year - year in range(1, 4):  # Check if the year is within the valid range
+        if current_year - year in range(0, 4):  # Check if the year is within the valid range
             return True
     return False
