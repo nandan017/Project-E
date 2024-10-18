@@ -22,7 +22,7 @@ def dashboard(request):
     total_candidates = Candidate.objects.count()
     
     # Get vote count per candidate and store it in a list of tuples (candidate, count)
-    candidate_votes = {candidate: Vote.objects.filter(candidate=candidate).count() for candidate in Candidate.objects.all()}
+    candidate_votes = {candidate: Vote.objects.filter(candidates=candidate).count() for candidate in Candidate.objects.all()}
     # Sort the dictionary by vote count in descending order
     sorted_candidate_votes = sorted(candidate_votes.items(), key=lambda x: x[1], reverse=True)
     valid_blockchain = is_blockchain_valid()
