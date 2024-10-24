@@ -1,6 +1,4 @@
 from django.db import models
-
-from django.db import models
 from election.models import Candidate
 
 class Vote(models.Model):
@@ -13,4 +11,4 @@ class Vote(models.Model):
     hash = models.CharField(max_length=64)
 
     def __str__(self):
-        return f'Vote by {self.student_id} for {self.candidate.name}'
+        return f'Vote by {self.student_id}'

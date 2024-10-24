@@ -89,35 +89,45 @@ def manual_qr_submit(request):
 def voting_interface(request):
     # Fetch all candidates to display them on the page
     candidates = Candidate.objects.all()
-    qr_code = request.GET.get('qr_code')
+    qr_code = request.GET.get('qr_code')  # Passed as GET parameter
 
     if request.method == 'POST':
-        candidate_id = request.POST.get('candidate_id')
-        student_id = request.POST.get('qr_code')
+        # Retrieve the selected candidates from the form (comma-separated string)
+        candidates_id = request.POST.get('selected_candidates', '').split(',')
+        student_id = request.POST['qr_code']  # Retrieve the hidden input value (qr_code from POST)
 
-        # Validate that the candidate exists
-        candidate = get_object_or_404(Candidate, candidate_key=candidate_id)
-        print("Selected candidate:", candidate)
-        # Create a vote instance
-        previous_hash = Vote.objects.last().hash if Vote.objects.exists() else "0"  # Using the last vote's hash or "0"
+        # Generate a vote hash
+        previous_hash = Vote.objects.last().hash if Vote.objects.exists() else "0"  # Use last vote hash or "0"
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        # Combine student_id, candidate, and timestamp to create a unique hash
-        vote_data = f'{student_id}{candidate_id}{timestamp}{previous_hash}'.encode('utf-8')
-        print("Vote data:", vote_data)
+        print("CanID",candidates_id)
+        candidates_id.sort()
+        print("CanID",candidates_id)
+        # Combine student_id, timestamp, and previous_hash to create a unique hash
+        vote_data = f'{student_id}{candidates_id}{timestamp}{previous_hash}'.encode('utf-8')
         vote_hash = hashlib.sha256(vote_data).hexdigest()
-        print("Vote hash:", vote_hash)
-        # Save the vote in the database
+        print("\n\nFrom Views When Saving")
+        print("\n\n",vote_data,"\n\n")
+        # Create the vote instance
         vote = Vote(
             timestamp=timestamp,
             student_id=student_id,
-            candidate=candidate,
             previous_hash=previous_hash,
             hash=vote_hash
         )
         vote.save()
 
+        # Link the selected candidates to the vote
+        for candidate_id in candidates_id:
+            candidate = get_object_or_404(Candidate, candidate_key=candidate_id)
+            vote.candidates.add(candidate)
+
+        # Save the many-to-many relation
+        vote.save()
+
+        # Redirect to a success page after processing votes
         return redirect('vote_success')
 
+    # Render the page with candidates and the provided qr_code
     return render(request, 'voting/voting_interface.html', {'candidates': candidates, 'qr_code': qr_code})
 
 def vote_success(request):

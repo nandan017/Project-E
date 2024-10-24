@@ -26,13 +26,14 @@
             <input type="text" class="form-control" id="student_id" name="student_id" value="{{qr_code}}" disabled>
             <input type="hidden" name="qr_code" value="{{ qr_code }}">
         </div>
-        
-        <button type="submit" class="btn btn-primary mt-3">Submit Vote</button>
-        <br><br>
+
+        <!-- Hidden input to store selected candidate IDs -->
+        <input type="hidden" name="selected_candidates" id="selected-candidates">
+
         <div class="row">
             {% for candidate in candidates %}
             <div class="col-md-4 mb-4">
-                <div class="card candidate-card" data-candidate="{{ candidate.pk }}">
+                <div class="card candidate-card" data-candidate="{{ candidate.candidate_key }}">
                     <img src="{{ candidate.image.url }}" class="card-img-top" alt="{{ candidate.name }}">
                     <div class="card-body">
                         <h5 class="card-title">{{ candidate.name }}</h5>
@@ -45,6 +46,16 @@
             {% endfor %}
         </div>
     </form>
+</div>
+
+<!-- Confirmation Dialog (Hidden by Default) -->
+<div id="confirmation-dialog" style="display: none;">
+    <div class="dialog-content">
+        <h4>Confirm Your Vote</h4>
+        <p>You have selected 10 candidates. Are you sure you want to submit your vote?</p>
+        <button id="confirm-submit" class="btn btn-primary">Yes, Submit Vote</button>
+        <button id="cancel-submit" class="btn btn-secondary">Cancel</button>
+    </div>
 </div>
 
 <!-- Styles -->
@@ -103,45 +114,86 @@
         background-color: transparent;
         backdrop-filter: blur(10px);
     }
+    #confirmation-dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1001; /* Ensure it's above other content */
+        display: none; /* Hidden by default */
+    }
+    .dialog-content {
+        text-align: center;
+    }
+    #confirm-submit, #cancel-submit {
+        margin: 10px;
+    }
 </style>
 
 <!-- Script -->
 <script>
     let progressCount = 0;
     const totalSegments = 10;
+    let selectedCandidates = [];
 
     document.addEventListener('DOMContentLoaded', function() {
         const candidateCards = document.querySelectorAll('.candidate-card');
+        const selectedCandidatesInput = document.getElementById('selected-candidates');
+        const confirmationDialog = document.getElementById('confirmation-dialog');
+        const confirmButton = document.getElementById('confirm-submit');
+        const cancelButton = document.getElementById('cancel-submit');
         
         candidateCards.forEach(card => {
             card.addEventListener('click', function() {
                 const checkbox = card.querySelector('.candidate-radio');
                 const tickSymbol = card.querySelector('.tick-symbol');
+                const candidateId = card.getAttribute('data-candidate');
                 
                 // Toggle selection
                 checkbox.checked = !checkbox.checked;
 
                 // Update progress and UI
                 if (checkbox.checked) {
-                    progressCount++;
-                    card.classList.add('selected');
-                    tickSymbol.style.display = 'block';
+                    if (selectedCandidates.length < totalSegments) {
+                        selectedCandidates.push(candidateId);
+                        progressCount++;
+                        card.classList.add('selected');
+                        tickSymbol.style.display = 'block';
+                    } else {
+                        alert('You can only select up to 10 candidates!');
+                        checkbox.checked = false;
+                    }
                 } else {
+                    selectedCandidates = selectedCandidates.filter(id => id !== candidateId);
                     progressCount--;
                     card.classList.remove('selected');
                     tickSymbol.style.display = 'none';
                 }
 
-                if (progressCount > totalSegments) {
-                    progressCount = totalSegments;
-                    alert('You can only select up to 10 candidates!');
-                    checkbox.checked = false;
-                    card.classList.remove('selected');
-                    tickSymbol.style.display = 'none';
-                }
-
                 updateProgressBar();
+                selectedCandidatesInput.value = selectedCandidates.join(',');
+
+                // Show confirmation dialog if exactly 10 candidates are selected
+                if (selectedCandidates.length === 10) {
+                    confirmationDialog.style.display = 'block';
+                } else {
+                    confirmationDialog.style.display = 'none'; // Hide dialog if not exactly 10
+                }
             });
+        });
+
+        // Handle confirmation button click
+        confirmButton.addEventListener('click', function() {
+            document.querySelector('form').submit(); // Submit the form
+        });
+
+        // Handle cancel button click
+        cancelButton.addEventListener('click', function() {
+            confirmationDialog.style.display = 'none'; // Hide dialog
         });
     });
 
