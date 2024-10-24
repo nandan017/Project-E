@@ -2,7 +2,23 @@
 
 {% block content %}
 <div class="container">
-    <h2 class="text-center my-4">Vote for Your Candidate</h2>
+    <h2 class="text-center my-4">Vote for 10 Candidates</h2>
+    
+    <!-- Segmented Progress Bar with Vote Count -->
+    <div class="progress-container">
+        <span id="vote-count" class="vote-count">0/10</span>
+        <div class="progress-segment" id="segment-1"></div>
+        <div class="progress-segment" id="segment-2"></div>
+        <div class="progress-segment" id="segment-3"></div>
+        <div class="progress-segment" id="segment-4"></div>
+        <div class="progress-segment" id="segment-5"></div>
+        <div class="progress-segment" id="segment-6"></div>
+        <div class="progress-segment" id="segment-7"></div>
+        <div class="progress-segment" id="segment-8"></div>
+        <div class="progress-segment" id="segment-9"></div>
+        <div class="progress-segment" id="segment-10"></div>
+    </div>
+
     <form method="POST" action="{% url 'voting_interface' %}">
         {% csrf_token %}
         <div class="form-group mb-3">
@@ -10,41 +26,189 @@
             <input type="text" class="form-control" id="student_id" name="student_id" value="{{qr_code}}" disabled>
             <input type="hidden" name="qr_code" value="{{ qr_code }}">
         </div>
-        
+
+        <!-- Hidden input to store selected candidate IDs -->
+        <input type="hidden" name="selected_candidates" id="selected-candidates">
+
         <div class="row">
             {% for candidate in candidates %}
             <div class="col-md-4 mb-4">
-                <div class="card">
+                <div class="card candidate-card" data-candidate="{{ candidate.candidate_key }}">
                     <img src="{{ candidate.image.url }}" class="card-img-top" alt="{{ candidate.name }}">
                     <div class="card-body">
                         <h5 class="card-title">{{ candidate.name }}</h5>
                         <p class="card-text">{{ candidate.forum }}</p>
-                        <div class="form-check" style="display: inline-block; margin-right: 10px;">
-                            <input class="form-check-input" type="radio" name="candidate_id" id="candidate_{{ candidate.pk }}" value="{{ candidate.pk }}" required>
-                            <label class="form-check-label" for="candidate_{{ candidate.pk }}">
-                                Vote for {{ candidate.name }}
-                            </label>
-                        </div>                                                
+                        <input class="form-check-input candidate-radio" type="checkbox" name="candidate_ids" id="candidate_{{ candidate.pk }}" value="{{ candidate.pk }}">
+                        <span class="tick-symbol" style="display:none;">✅</span> <!-- Tick symbol -->
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
-
-        <button type="submit" class="btn btn-primary mt-3">Submit Vote</button>
     </form>
 </div>
 
+<!-- Confirmation Dialog (Hidden by Default) -->
+<div id="confirmation-dialog" style="display: none;">
+    <div class="dialog-content">
+        <h4>Confirm Your Vote</h4>
+        <p>You have selected 10 candidates. Are you sure you want to submit your vote?</p>
+        <button id="confirm-submit" class="btn btn-primary">Yes, Submit Vote</button>
+        <button id="cancel-submit" class="btn btn-secondary">Cancel</button>
+    </div>
+</div>
+
+<!-- Styles -->
 <style>
     .card {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
     }
     .card:hover {
         transform: translateY(-5px);
     }
+    .card.selected {
+        border: 4px solid #28a745;
+    }
     .form-check-input {
-        margin-top: 1rem;
+        display: none;
+    }
+    .tick-symbol {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 20px;
+        color: #4caf50;
+    }
+    .progress-container {
+        display: flex;
+        width: 100%;
+        position: fixed;
+        margin-top: 45px;
+        top: 0;
+        left: 0;
+        padding: 10px;
+        box-sizing: border-box;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+    }
+    .progress-segment {
+        width: 10%;
+        height: 5px;
+        margin: 0 5px;
+        background-color: #ddd;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    .progress-segment.active {
+        background-color: #4caf50;
+    }
+    .vote-count {
+        position: absolute;
+        top: -25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        background-color: transparent;
+        backdrop-filter: blur(10px);
+    }
+    #confirmation-dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1001; /* Ensure it's above other content */
+        display: none; /* Hidden by default */
+    }
+    .dialog-content {
+        text-align: center;
+    }
+    #confirm-submit, #cancel-submit {
+        margin: 10px;
     }
 </style>
+
+<!-- Script -->
+<script>
+    let progressCount = 0;
+    const totalSegments = 10;
+    let selectedCandidates = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const candidateCards = document.querySelectorAll('.candidate-card');
+        const selectedCandidatesInput = document.getElementById('selected-candidates');
+        const confirmationDialog = document.getElementById('confirmation-dialog');
+        const confirmButton = document.getElementById('confirm-submit');
+        const cancelButton = document.getElementById('cancel-submit');
+        
+        candidateCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const checkbox = card.querySelector('.candidate-radio');
+                const tickSymbol = card.querySelector('.tick-symbol');
+                const candidateId = card.getAttribute('data-candidate');
+                
+                // Toggle selection
+                checkbox.checked = !checkbox.checked;
+
+                // Update progress and UI
+                if (checkbox.checked) {
+                    if (selectedCandidates.length < totalSegments) {
+                        selectedCandidates.push(candidateId);
+                        progressCount++;
+                        card.classList.add('selected');
+                        tickSymbol.style.display = 'block';
+                    } else {
+                        alert('You can only select up to 10 candidates!');
+                        checkbox.checked = false;
+                    }
+                } else {
+                    selectedCandidates = selectedCandidates.filter(id => id !== candidateId);
+                    progressCount--;
+                    card.classList.remove('selected');
+                    tickSymbol.style.display = 'none';
+                }
+
+                updateProgressBar();
+                selectedCandidatesInput.value = selectedCandidates.join(',');
+
+                // Show confirmation dialog if exactly 10 candidates are selected
+                if (selectedCandidates.length === 10) {
+                    confirmationDialog.style.display = 'block';
+                } else {
+                    confirmationDialog.style.display = 'none'; // Hide dialog if not exactly 10
+                }
+            });
+        });
+
+        // Handle confirmation button click
+        confirmButton.addEventListener('click', function() {
+            document.querySelector('form').submit(); // Submit the form
+        });
+
+        // Handle cancel button click
+        cancelButton.addEventListener('click', function() {
+            confirmationDialog.style.display = 'none'; // Hide dialog
+        });
+    });
+
+    function updateProgressBar() {
+        for (let i = 1; i <= totalSegments; i++) {
+            const segment = document.getElementById(`segment-${i}`);
+            if (i <= progressCount) {
+                segment.classList.add('active');
+            } else {
+                segment.classList.remove('active');
+            }
+        }
+
+        // Update vote count
+        document.getElementById('vote-count').innerText = `${progressCount}/10`;
+    }
+</script>
 {% endblock %}

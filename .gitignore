@@ -1,0 +1,11 @@
+# Python cache files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Django-specific cache or migration files
+*.log
+*.pot
+*.pyc
+*.so

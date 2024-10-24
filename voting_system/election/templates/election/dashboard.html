@@ -19,7 +19,7 @@
         <div class="col-md-4">
             <div class="card mb-3">
                 <div class="card-body">
-                    <h5 class="card-title">Total Votes</h5>
+                    <h5 class="card-title">Total Voters</h5>
                     <p class="card-text">{{ total_votes }}</p>
                 </div>
             </div>
@@ -32,7 +32,21 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-2">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Blockchain</h5>
+                    <p class="card-text {% if valid_blockchain %}text-success fw-bold{% else %}text-danger fw-bold{% endif %}">
+                        {% if valid_blockchain %}Valid{% else %}Invalid{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <button class="btn btn-success mt-3" onclick="window.location.href='{% url 'add_candidate' %}'">Add Candidate</button>
+    <button class="btn btn-primary mt-3" onclick="window.location.href='{% url 'scan_qr' %}'">Start Voting</button>
+
 
     <h2 class="mt-4">Vote Count per Candidate</h2>
     <table class="table">
@@ -43,7 +57,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for candidate, count in candidate_votes.items %}
+            {% for candidate, count in sorted_candidate_votes %}
             <tr>
                 <td>{{ candidate.name }} ({{ candidate.forum }})</td>
                 <td>{{ count }}</td>
@@ -52,8 +66,6 @@
         </tbody>
     </table>
     <!-- Inside your dashboard.html -->
-<button class="btn btn-success mt-3" onclick="window.location.href='{% url 'add_candidate' %}'">Add Candidate</button>
-<button class="btn btn-primary mt-3" onclick="window.location.href='{% url 'scan_qr' %}'">Start Voting</button>
 
 </div>
 {% endblock %}
