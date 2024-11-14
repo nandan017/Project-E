@@ -58,6 +58,15 @@
     </div>
 </div>
 
+<div id="nota-confirmation-dialog" style="display: none;">
+    <div class="dialog-content">
+        <h4>Confirm Your Choice</h4>
+        <p>By choosing "NOTA" (None of the Above/remaining), you acknowledge that you are opting not to vote for any of the candidates/remaining candidates. Are you sure you want to proceed?</p>
+        <button id="confirm-nota" class="btn btn-warning">Yes, I Understand</button>
+        <button id="cancel-nota" class="btn btn-secondary">Cancel</button>
+    </div>
+</div>
+
 <!-- Styles -->
 <style>
     .card {
@@ -132,6 +141,24 @@
     #confirm-submit, #cancel-submit {
         margin: 10px;
     }
+    #nota-confirmation-dialog {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        z-index: 1001;
+        display: none; /* Hidden by default */
+    }
+    .dialog-content {
+        text-align: center;
+    }
+    #confirm-nota, #cancel-nota {
+        margin: 10px;
+    }
 </style>
 
 <!-- Script -->
@@ -140,75 +167,105 @@
     const totalSegments = 10;
     let selectedCandidates = [];
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const candidateCards = document.querySelectorAll('.candidate-card');
-        const selectedCandidatesInput = document.getElementById('selected-candidates');
-        const confirmationDialog = document.getElementById('confirmation-dialog');
-        const confirmButton = document.getElementById('confirm-submit');
-        const cancelButton = document.getElementById('cancel-submit');
-        
-        candidateCards.forEach(card => {
-            card.addEventListener('click', function() {
-                const checkbox = card.querySelector('.candidate-radio');
-                const tickSymbol = card.querySelector('.tick-symbol');
-                const candidateId = card.getAttribute('data-candidate');
-                
-                // Toggle selection
-                checkbox.checked = !checkbox.checked;
+document.addEventListener('DOMContentLoaded', function() {
+    const candidateCards = document.querySelectorAll('.candidate-card');
+    const selectedCandidatesInput = document.getElementById('selected-candidates');
 
-                // Update progress and UI
+    const confirmationDialog = document.getElementById('confirmation-dialog');
+    const confirmButton = document.getElementById('confirm-submit');
+    const cancelButton = document.getElementById('cancel-submit');
+
+    const notaConfirmationDialog = document.getElementById('nota-confirmation-dialog');
+    const confirmNotaButton = document.getElementById('confirm-nota');
+    const cancelNotaButton = document.getElementById('cancel-nota');
+
+    candidateCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const checkbox = card.querySelector('.candidate-radio');
+            const tickSymbol = card.querySelector('.tick-symbol');
+            const candidateId = card.getAttribute('data-candidate');
+            console.log(candidateId);
+            
+            // Toggle selection
+            checkbox.checked = !checkbox.checked;
+
+            // Check if NOTA is selected or deselected
+            if (candidateId === "b62845a8-dd7c-4629-b247-5d5b19c87234") {
                 if (checkbox.checked) {
-                    if (selectedCandidates.length < totalSegments) {
-                        selectedCandidates.push(candidateId);
-                        progressCount++;
-                        card.classList.add('selected');
-                        tickSymbol.style.display = 'block';
-                    } else {
-                        alert('You can only select up to 10 candidates!');
-                        checkbox.checked = false;
-                    }
-                } else {
-                    selectedCandidates = selectedCandidates.filter(id => id !== candidateId);
-                    progressCount--;
-                    card.classList.remove('selected');
-                    tickSymbol.style.display = 'none';
-                }
-
-                updateProgressBar();
-                selectedCandidatesInput.value = selectedCandidates.join(',');
-
-                // Show confirmation dialog if exactly 10 candidates are selected
-                if (selectedCandidates.length === 10) {
+                    console.log("NOTA is selected");
                     confirmationDialog.style.display = 'block';
                 } else {
-                    confirmationDialog.style.display = 'none'; // Hide dialog if not exactly 10
+                    console.log("NOTA is deselected");
                 }
-            });
-        });
+            }
 
-        // Handle confirmation button click
-        confirmButton.addEventListener('click', function() {
-            document.querySelector('form').submit(); // Submit the form
-        });
+            // Update progress and UI
+            if (checkbox.checked) {
+                if (selectedCandidates.length < totalSegments) {
+                    selectedCandidates.push(candidateId);
+                    progressCount++;
+                    card.classList.add('selected');
+                    tickSymbol.style.display = 'block';
+                    console.log(selectedCandidates);
+                } else {
+                    alert('You can only select up to 10 candidates!');
+                    checkbox.checked = false;
+                }
+            } else {
+                selectedCandidates = selectedCandidates.filter(id => id !== candidateId);
+                progressCount--;
+                card.classList.remove('selected');
+                tickSymbol.style.display = 'none';
+            }
 
-        // Handle cancel button click
-        cancelButton.addEventListener('click', function() {
-            confirmationDialog.style.display = 'none'; // Hide dialog
+            updateProgressBar();
+            selectedCandidatesInput.value = selectedCandidates.join(',');
+
+            // Show confirmation dialog if exactly 10 candidates are selected
+            if (selectedCandidates.length === 10) {
+                confirmationDialog.style.display = 'block';
+            } else if (selectedCandidates.includes("b62845a8-dd7c-4629-b247-5d5b19c87234")) {
+                notaConfirmationDialog.style.display = 'block';
+            } else {
+                confirmationDialog.style.display = 'none';
+            }
         });
     });
 
-    function updateProgressBar() {
-        for (let i = 1; i <= totalSegments; i++) {
-            const segment = document.getElementById(`segment-${i}`);
-            if (i <= progressCount) {
-                segment.classList.add('active');
-            } else {
-                segment.classList.remove('active');
-            }
-        }
+    // Handle confirmation button click
+    confirmButton.addEventListener('click', function() {
+        document.querySelector('form').submit(); // Submit the form
+    });
 
-        // Update vote count
-        document.getElementById('vote-count').innerText = `${progressCount}/10`;
+    // Handle cancel button click
+    cancelButton.addEventListener('click', function() {
+        confirmationDialog.style.display = 'none'; // Hide dialog
+    });
+
+    confirmNotaButton.addEventListener('click', function() {
+        document.querySelector('form').submit(); // Submit the form
+    });
+
+    // Handle cancel button click
+    cancelNotaButton.addEventListener('click', function() {
+        notaConfirmationDialog.style.display = 'none';
+        confirmationDialog.style.display = 'none'; // Hide dialog
+    });
+});
+
+function updateProgressBar() {
+    for (let i = 1; i <= totalSegments; i++) {
+        const segment = document.getElementById(`segment-${i}`);
+        if (i <= progressCount) {
+            segment.classList.add('active');
+        } else {
+            segment.classList.remove('active');
+        }
     }
+
+    // Update vote count
+    document.getElementById('vote-count').innerText = `${progressCount}/10`;
+}
+
 </script>
 {% endblock %}
