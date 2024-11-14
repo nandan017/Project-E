@@ -61,7 +61,7 @@
 <div id="nota-confirmation-dialog" style="display: none;">
     <div class="dialog-content">
         <h4>Confirm Your Choice</h4>
-        <p>By choosing "NOTA" (None of the Above), you acknowledge that you are opting not to vote for any of the candidates, effectively wasting your vote. Are you sure you want to proceed?</p>
+        <p>By choosing "NOTA" (None of the Above/remaining), you acknowledge that you are opting not to vote for any of the candidates/remaining candidates. Are you sure you want to proceed?</p>
         <button id="confirm-nota" class="btn btn-warning">Yes, I Understand</button>
         <button id="cancel-nota" class="btn btn-secondary">Cancel</button>
     </div>
@@ -183,14 +183,14 @@ document.addEventListener('DOMContentLoaded', function() {
         card.addEventListener('click', function() {
             const checkbox = card.querySelector('.candidate-radio');
             const tickSymbol = card.querySelector('.tick-symbol');
-            const candidateId = card.querySelector('.card-title').textContent.trim();
+            const candidateId = card.getAttribute('data-candidate');
             console.log(candidateId);
             
             // Toggle selection
             checkbox.checked = !checkbox.checked;
 
             // Check if NOTA is selected or deselected
-            if (candidateId === "NOTA") {
+            if (candidateId === "b62845a8-dd7c-4629-b247-5d5b19c87234") {
                 if (checkbox.checked) {
                     console.log("NOTA is selected");
                     confirmationDialog.style.display = 'block';
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show confirmation dialog if exactly 10 candidates are selected
             if (selectedCandidates.length === 10) {
                 confirmationDialog.style.display = 'block';
-            } else if (selectedCandidates.includes("NOTA")) {
+            } else if (selectedCandidates.includes("b62845a8-dd7c-4629-b247-5d5b19c87234")) {
                 notaConfirmationDialog.style.display = 'block';
             } else {
                 confirmationDialog.style.display = 'none';
@@ -239,6 +239,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle cancel button click
     cancelButton.addEventListener('click', function() {
+        confirmationDialog.style.display = 'none'; // Hide dialog
+    });
+
+    confirmNotaButton.addEventListener('click', function() {
+        document.querySelector('form').submit(); // Submit the form
+    });
+
+    // Handle cancel button click
+    cancelNotaButton.addEventListener('click', function() {
+        notaConfirmationDialog.style.display = 'none';
         confirmationDialog.style.display = 'none'; // Hide dialog
     });
 });
