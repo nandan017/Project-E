@@ -66,6 +66,37 @@
         </tbody>
     </table>
     <!-- Inside your dashboard.html -->
+    <button class="btn btn-secondary mt-3" onclick="downloadCSV()">Download Vote Counts</button>
+
+    <script>
+        function downloadCSV() {
+            // Select the table rows
+            const rows = document.querySelectorAll("table tr");
+            let csvContent = "";
+        
+            // Loop through each row and construct the CSV format
+            rows.forEach(row => {
+                const cols = row.querySelectorAll("th, td");
+                const rowData = Array.from(cols).map(col => col.innerText);
+                csvContent += rowData.join(",") + "\n";
+            });
+        
+            // Create a Blob from the CSV data
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+        
+            // Create a link element and trigger download
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "candidate_votes.csv";
+            document.body.appendChild(a);
+            a.click();
+        
+            // Clean up by revoking the object URL and removing the link
+            URL.revokeObjectURL(url);
+            a.remove();
+        }
+        </script>
 
 </div>
 {% endblock %}
