@@ -1,102 +1,246 @@
 {% extends 'voting/base.html' %}
-{% block extra_css %}
-<style>
-    .card {
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    table {
-        margin-top: 20px;
-    }
-</style>
-{% endblock %}
-
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Election Dashboard</h1>
+<div class="container-fluid px-4 py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="dashboard-title">Election Dashboard</h1>
+        <div class="action-buttons">
+            <a href="{% url 'add_candidate' %}" class="btn btn-secondary">
+                <i class="fas fa-plus me-2"></i>Add Candidate
+            </a>
+            <a href="{% url 'scan_qr' %}" class="btn btn-primary">
+                <i class="fas fa-qrcode me-2"></i>Start Voting Session
+            </a>
+        </div>
+    </div>
+
+    <!-- Stat Cards Row -->
     <div class="row">
-        <div class="col-md-4">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Total Voters</h5>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="card-icon" style="background-color: rgba(59, 130, 246, 0.1); color: var(--blue-accent);">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-content">
+                    <h5 class="card-title">Total Votes Cast</h5>
                     <p class="card-text">{{ total_votes }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card mb-3">
-                <div class="card-body">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="stat-card">
+                <div class="card-icon" style="background-color: rgba(16, 185, 129, 0.1); color: var(--green-primary);">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="card-content">
                     <h5 class="card-title">Total Candidates</h5>
                     <p class="card-text">{{ total_candidates }}</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-2">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Blockchain</h5>
-                    <p class="card-text {% if valid_blockchain %}text-success fw-bold{% else %}text-danger fw-bold{% endif %}">
-                        {% if valid_blockchain %}Valid{% else %}Invalid{% endif %}
+        <div class="col-lg-4 col-md-12 mb-4">
+            <div class="stat-card">
+                <div class="card-icon {% if valid_blockchain %}bg-success-light text-success{% else %}bg-danger-light text-danger{% endif %}">
+                    <i class="fas {% if valid_blockchain %}fa-shield-alt{% else %}fa-exclamation-triangle{% endif %}"></i>
+                </div>
+                <div class="card-content">
+                    <h5 class="card-title">Blockchain Integrity</h5>
+                    <p class="card-text fw-bold {% if valid_blockchain %}text-success{% else %}text-danger{% endif %}">
+                        {% if valid_blockchain %}Chain is Valid{% else %}Chain is Invalid{% endif %}
                     </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <button class="btn btn-success mt-3" onclick="window.location.href='{% url 'add_candidate' %}'">Add Candidate</button>
-    <button class="btn btn-primary mt-3" onclick="window.location.href='{% url 'scan_qr' %}'">Start Voting</button>
-
-
-    <h2 class="mt-4">Vote Count per Candidate</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Candidate</th>
-                <th>Vote Count</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for candidate, count in sorted_candidate_votes %}
-            <tr>
-                <td>{{ candidate.name }} ({{ candidate.forum }})</td>
-                <td>{{ count }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <!-- Inside your dashboard.html -->
-    <button class="btn btn-secondary mt-3" onclick="downloadCSV()">Download Vote Counts</button>
-
-    <script>
-        function downloadCSV() {
-            // Select the table rows
-            const rows = document.querySelectorAll("table tr");
-            let csvContent = "";
-        
-            // Loop through each row and construct the CSV format
-            rows.forEach(row => {
-                const cols = row.querySelectorAll("th, td");
-                const rowData = Array.from(cols).map(col => col.innerText);
-                csvContent += rowData.join(",") + "\n";
-            });
-        
-            // Create a Blob from the CSV data
-            const blob = new Blob([csvContent], { type: "text/csv" });
-            const url = URL.createObjectURL(blob);
-        
-            // Create a link element and trigger download
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "candidate_votes.csv";
-            document.body.appendChild(a);
-            a.click();
-        
-            // Clean up by revoking the object URL and removing the link
-            URL.revokeObjectURL(url);
-            a.remove();
-        }
-        </script>
-
+    <!-- Vote Count Table Card -->
+    <div class="table-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="table-title">Live Vote Count</h2>
+            <button class="btn btn-secondary" onclick="downloadCSV()">
+                <i class="fas fa-download me-2"></i>Download as CSV
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table modern-table">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Forum</th>
+                        <th class="text-end">Vote Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidate, count in sorted_candidate_votes %}
+                    <tr>
+                        <td>{{ candidate.name }}</td>
+                        <td>{{ candidate.forum }}</td>
+                        <td class="text-end fw-bold">{{ count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-5">No votes have been cast yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<!-- FontAwesome for icons -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+<style>
+    .dashboard-title {
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    /* --- Stat Cards --- */
+    .stat-card {
+        display: flex;
+        align-items: center;
+        background-color: var(--card-background);
+        padding: 1.5rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 7px 25px -8px rgba(0, 0, 0, 0.08);
+    }
+    .card-icon {
+        flex-shrink: 0;
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+    .card-content .card-title {
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.25rem;
+    }
+    .card-content .card-text {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    /* Blockchain Status Colors */
+    .bg-success-light { background-color: rgba(16, 185, 129, 0.1); }
+    .text-success { color: var(--green-primary) !important; }
+    .bg-danger-light { background-color: rgba(239, 68, 68, 0.1); }
+    .text-danger { color: #EF4444 !important; }
+
+    /* --- Action Buttons --- */
+    .action-buttons .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s ease-out;
+        border: none;
+    }
+    .action-buttons .btn-primary {
+        background-color: var(--blue-accent);
+        color: #fff;
+    }
+    .action-buttons .btn-primary:hover {
+        background-color: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px -3px rgba(59, 130, 246, 0.4);
+    }
+    .action-buttons .btn-secondary {
+        background-color: var(--border-color);
+        color: var(--text-primary);
+    }
+    .action-buttons .btn-secondary:hover {
+        background-color: #d1d5db;
+        transform: translateY(-2px);
+    }
+
+    /* --- Table Card --- */
+    .table-card {
+        background-color: var(--card-background);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        margin-top: 2rem;
+    }
+    .table-title {
+        font-weight: 700;
+        font-size: 1.5rem;
+    }
+    .table-card .btn-secondary {
+        background-color: var(--background-color);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-radius: 12px;
+    }
+    .table-card .btn-secondary:hover {
+        background-color: #f0f2f4;
+    }
+
+    /* --- Modern Table Style --- */
+    .modern-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    .modern-table thead th {
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid var(--border-color);
+        padding: 1rem;
+    }
+    .modern-table tbody td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+    .modern-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    .modern-table tbody tr:hover {
+        background-color: var(--background-color);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function downloadCSV() {
+        const rows = document.querySelectorAll("table tr");
+        let csvContent = "data:text/csv;charset=utf-8,";
+    
+        rows.forEach(row => {
+            const cols = row.querySelectorAll("th, td");
+            const rowData = Array.from(cols).map(col => `"${col.innerText.replace(/"/g, '""')}"`); // Handle quotes
+            csvContent += rowData.join(",") + "\r\n";
+        });
+    
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "candidate_votes.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
 {% endblock %}

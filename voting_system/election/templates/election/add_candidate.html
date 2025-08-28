@@ -1,23 +1,130 @@
 {% extends 'voting/base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Add New Candidate</h1>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="name">Name:</label>
-            <input type="text" class="form-control" name="name" required>
-        </div>
-        <div class="form-group">
-            <label for="forum">Forum:</label>
-            <input type="text" class="form-control" name="forum" required>
-        </div>
-        <div class="form-group">
-            <label for="image">Candidate Image:</label>
-            <input type="file" class="form-control" name="image" accept="image/*" required>
-        </div>
-        <button type="submit" class="btn btn-primary mt-3">Add Candidate</button>
-    </form>
+<div class="form-page-container">
+    <div class="form-card">
+        <h1 class="text-center">Add New Candidate</h1>
+        <p class="text-center subtitle">Fill in the details below to add a candidate to the election roster.</p>
+        
+        <form method="POST" enctype="multipart/form-data" class="mt-4">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="name" class="form-label">Candidate Name</label>
+                <input type="text" class="form-control" id="name" name="name" required placeholder="e.g., Jane Doe">
+            </div>
+            
+            <div class="mb-4">
+                <label for="forum" class="form-label">Forum</label>
+                <input type="text" class="form-control" id="forum" name="forum" required placeholder="e.g., Science Forum">
+            </div>
+            
+            <div class="mb-4">
+                <label for="image" class="form-label">Candidate Image</label>
+                <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 mt-3">Add Candidate</button>
+        </form>
+    </div>
 </div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-page-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem 1rem;
+    }
+
+    .form-card {
+        background-color: var(--card-background);
+        padding: 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 550px;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-card h1 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-card .subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 0.85rem 1rem;
+        font-size: 1rem;
+        font-family: 'Satoshi', sans-serif;
+        color: var(--text-primary);
+        background-color: var(--card-background);
+        background-clip: padding-box;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+
+    .form-control:focus {
+        border-color: var(--blue-accent);
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Modern styling for the file input */
+    .form-control[type="file"] {
+        padding: 0.5rem 0.5rem 0.5rem 1rem; /* Adjust padding to align text */
+    }
+
+    .form-control[type="file"]::file-selector-button {
+        background-color: var(--background-color);
+        color: var(--text-primary);
+        font-family: 'Satoshi', sans-serif;
+        font-weight: 500;
+        border: 1px solid var(--border-color);
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        margin-right: 1rem;
+        margin-left: -0.5rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease-out;
+    }
+
+    .form-control[type="file"]::file-selector-button:hover {
+        background-color: #f0f2f4;
+    }
+
+    .btn-primary {
+        background-color: var(--blue-accent);
+        border-color: var(--blue-accent);
+        color: #fff;
+        padding: 0.85rem 1.75rem;
+        font-size: 1rem;
+        font-weight: 700;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s ease-out;
+    }
+
+    .btn-primary:hover {
+        background-color: #2563eb; /* Darker shade of blue */
+        border-color: #2563eb;
+        transform: translateY(-3px);
+        box-shadow: 0 7px 20px -4px rgba(59, 130, 246, 0.4);
+    }
+</style>
 {% endblock %}

@@ -1,30 +1,26 @@
 {% extends 'voting/base.html' %}
 
 {% block content %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+{# Font import for 'Satoshi' from Fontshare CDN #}
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 
-<div class="container">
-    <h2 class="text-center my-5">Vote for 10 Candidates</h2>
+<div class="container-fluid px-2 px-md-3">
+    <header class="page-header text-center my-4">
+        <h2>Vote for 10 Candidates</h2>
+    </header>
     
+    {# MODIFIED: Sticky header with enhanced glassmorphism #}
     <div class="progress-container">
-        <span id="vote-count" class="vote-count">0/10</span>
-        <div class="progress-segment" id="segment-1"></div>
-        <div class="progress-segment" id="segment-2"></div>
-        <div class="progress-segment" id="segment-3"></div>
-        <div class="progress-segment" id="segment-4"></div>
-        <div class="progress-segment" id="segment-5"></div>
-        <div class="progress-segment" id="segment-6"></div>
-        <div class="progress-segment" id="segment-7"></div>
-        <div class="progress-segment" id="segment-8"></div>
-        <div class="progress-segment" id="segment-9"></div>
-        <div class="progress-segment" id="segment-10"></div>
+        <span id="vote-count" class="vote-count">0 / 10 Voted</span>
+        {# MODIFIED: Single, continuous progress bar #}
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
     </div>
 
     <form method="POST" action="{% url 'voting_interface' %}">
         {% csrf_token %}
-        <div class="form-group mb-4 mx-auto" style="max-width: 400px;">
+        <div class="form-group mb-5 mx-auto" style="max-width: 400px;">
             <label for="student_id" class="form-label">Student ID</label>
             <input type="text" class="form-control" id="student_id" name="student_id" value="{{qr_code}}" readonly>
             <input type="hidden" name="qr_code" value="{{ qr_code }}">
@@ -34,20 +30,26 @@
 
         <div class="row">
             {% for candidate in candidates %}
-            <div class="col-md-2 col-sm-4 col-6 mb-4">
-                <div class="card candidate-card h-100 text-center" data-candidate="{{ candidate.candidate_key }}">
-                    <img src="{{ candidate.image.url }}" class="card-img-top rounded-circle mx-auto mt-3" alt="{{ candidate.name }}">
-                    <div class="card-body px-1 d-flex flex-column justify-content-center">
-                        <p class="card-title fw-medium mb-0">{{ candidate.name }}</p>
-                        <input class="form-check-input candidate-radio" type="checkbox" name="candidate_ids" id="candidate_{{ candidate.pk }}" value="{{ candidate.pk }}">
+            <div class="col-6 col-sm-4 col-md-1-7 mb-4"> 
+                <div class="card candidate-card h-100" data-candidate="{{ candidate.candidate_key }}">
+                    <div class="card-img-container">
+                        <img src="{{ candidate.image.url }}" class="card-img-top" alt="{{ candidate.name }}">
                     </div>
-                    <span class="tick-symbol" style="display:none;">✔️</span> </div>
+                    <div class="card-body text-center p-2">
+                        <p class="card-title mb-0">{{ candidate.name }}</p>
+                        <input class="form-check-input" type="checkbox" name="candidate_ids" id="candidate_{{ candidate.pk }}" value="{{ candidate.pk }}">
+                    </div>
+                    <div class="tick-symbol-container">
+                        <span class="tick-symbol">✔️</span>
+                    </div>
+                </div>
             </div>
             {% endfor %}
         </div>
     </form>
 </div>
 
+{# Dialogs remain structurally the same, but will be styled by the new CSS #}
 <div id="confirmation-dialog" style="display: none;">
     <div class="dialog-content">
         <h4>Confirm Your Vote</h4>
@@ -68,146 +70,183 @@
 
 
 <style>
+    :root {
+        --background-color: #F9FAFB;
+        --card-background: #FFFFFF;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-color: #E5E7EB;
+        --green-primary: #10B981; /* Softer, modern green */
+        --blue-accent: #3B82F6;   /* Subtle accent blue */
+    }
+
     body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8f9fa;
+        font-family: 'Satoshi', sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-primary);
     }
 
-    .container h2 {
+    .page-header h2 {
         font-weight: 700;
+        font-size: 2.25rem;
+        color: var(--text-primary);
     }
 
-    /* Minimalist Card Styling */
+    /* --- Custom 7-Column Layout --- */
+    .col-md-1-7 {
+        flex: 0 0 auto;
+        width: 14.2857%;
+    }
+    @media (max-width: 1199.98px) { .col-md-1-7 { width: 20%; } }
+    @media (max-width: 991.98px) { .col-md-1-7 { width: 33.3333%; } }
+    @media (max-width: 767.98px) { .col-md-1-7 { width: 50%; } }
+
+
+    /* --- Candidate Card & Interactions --- */
     .candidate-card {
-        border: 2px solid #e9ecef;
-        border-radius: 12px;
-        background-color: #fff;
-        transition: all 0.2s ease-in-out;
+        background-color: var(--card-background);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
         cursor: pointer;
         position: relative;
         overflow: hidden;
+        /* Transitions for all animated properties */
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-in-out;
     }
     
     .candidate-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-        border-color: #dee2e6;
+        transform: translateY(-6px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.07);
     }
     
+    /* "Press Down" effect on click */
+    .candidate-card:active {
+        transform: translateY(-2px) scale(0.98);
+        box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.06);
+    }
+
     .candidate-card.selected {
-        border-color: #28a745;
-        background-color: #f0fdf4;
+        border-color: var(--green-primary);
     }
     
-    /* Circular Image */
-    .candidate-card .card-img-top {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
+    /* --- Image with Gradient Overlay --- */
+    .card-img-container {
+        position: relative;
     }
     
-    .candidate-card .card-title {
-        font-size: 0.9rem;
-        color: #343a40;
-    }
-    
-    .form-check-input {
-        display: none;
-    }
-    
-    /* Modern Tick Symbol */
-    .tick-symbol {
+    .card-img-container::after {
+        content: '';
         position: absolute;
-        top: 8px;
-        right: 8px;
-        font-size: 1.5rem;
-        color: #28a745;
-        display: none; /* Controlled by JS */
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 50%;
+        background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+        pointer-events: none; /* Allows clicking through the gradient */
+        border-radius: 0 0 12px 12px;
     }
-    
-    .candidate-card.selected .tick-symbol {
+
+    .card-img-top {
+        width: 100%;
+        aspect-ratio: 3 / 4; 
+        object-fit: cover;
         display: block;
     }
     
-    /* Refined Progress Bar */
-    .progress-container {
-        display: flex;
+    .card-body {
+        position: absolute;
+        bottom: 0;
+        left: 0;
         width: 100%;
+        z-index: 2;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #FFFFFF;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+    
+    .form-check-input { display: none; }
+    
+    /* --- Animated Tick Symbol --- */
+    .tick-symbol-container {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 3;
+    }
+    .tick-symbol {
+        font-size: 1.2rem;
+        color: #fff;
+        background-color: var(--green-primary);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        /* Initial animation state: hidden */
+        opacity: 0;
+        transform: scale(0.5);
+        transition: opacity 0.2s ease-out, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .candidate-card.selected .tick-symbol {
+        opacity: 1;
+        transform: scale(1);
+    }
+    
+    /* --- Single, Smooth Progress Bar & Glassmorphism Header --- */
+    .progress-container {
         position: sticky;
         top: 0;
-        padding: 15px 10px;
-        background-color: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(8px);
+        padding: 12px 20px;
+        background-color: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
         z-index: 1000;
-        border-bottom: 1px solid #e9ecef;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+        text-align: center;
     }
 
-    .progress-segment {
-        flex-grow: 1;
-        height: 6px;
-        margin: 0 2px;
-        background-color: #e9ecef;
-        border-radius: 3px;
-        transition: background-color 0.3s ease;
+    .progress-bar-container {
+        width: 100%;
+        max-width: 600px;
+        height: 8px;
+        background-color: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 8px auto 0;
     }
 
-    .progress-segment.active {
-        background-color: #28a745;
+    .progress-bar-fill {
+        width: 0%; /* Controlled by JS */
+        height: 100%;
+        background-color: var(--green-primary);
+        border-radius: 4px;
+        transition: width 0.4s cubic-bezier(0.23, 1, 0.32, 1); /* Smooth fill animation */
     }
     
     .vote-count {
-        position: absolute;
-        top: -20px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 0.9rem;
+        font-size: 1rem;
         font-weight: 500;
-        color: #495057;
-        background-color: #fff;
-        padding: 2px 10px;
-        border-radius: 12px;
-        border: 1px solid #e9ecef;
+        color: var(--text-secondary);
     }
-    
-    /* Modern Dialog Styles */
+
+    /* --- Dialog Styles --- */
     #confirmation-dialog, #nota-confirmation-dialog {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: none; /* Controlled by JS */
-        align-items: center;
-        justify-content: center;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: none; align-items: center; justify-content: center;
         z-index: 1001;
     }
-
     .dialog-content {
-        background-color: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        text-align: center;
-        max-width: 400px;
-        margin: 1rem;
-    }
-
-    .dialog-content h4 {
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }
-
-    .dialog-content p {
-        color: #6c757d;
-        margin-bottom: 1.5rem;
-    }
-
-    .dialog-content button {
-        margin: 0 5px;
-        padding: 0.6rem 1.2rem;
-        border-radius: 8px;
-        font-weight: 500;
+        background-color: white; padding: 2.5rem; border-radius: 16px;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15); text-align: center;
+        max-width: 450px; margin: 1rem;
     }
 </style>
 
@@ -231,14 +270,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     candidateCards.forEach(card => {
         card.addEventListener('click', function() {
-            const checkbox = card.querySelector('.candidate-radio');
-            const tickSymbol = card.querySelector('.tick-symbol');
+            const checkbox = card.querySelector('.form-check-input');
             const candidateId = card.getAttribute('data-candidate');
             
-            // Toggle selection
             checkbox.checked = !checkbox.checked;
 
-            // Update progress and UI
             if (checkbox.checked) {
                 if (selectedCandidates.length < totalSegments) {
                     selectedCandidates.push(candidateId);
@@ -257,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updateProgressBar();
             selectedCandidatesInput.value = selectedCandidates.join(',');
 
-            // Show confirmation dialog logic
             if (selectedCandidates.length === 10) {
                 confirmationDialog.style.display = 'flex';
             } else if (selectedCandidates.includes("a9aa0b36-f95e-41cc-b71b-c30b3a8f8957")) {
@@ -268,39 +303,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Handle confirmation button click
-    confirmButton.addEventListener('click', function() {
-        document.querySelector('form').submit(); // Submit the form
-    });
-
-    // Handle cancel button click
-    cancelButton.addEventListener('click', function() {
-        confirmationDialog.style.display = 'none'; // Hide dialog
-    });
-
-    confirmNotaButton.addEventListener('click', function() {
-        document.querySelector('form').submit(); // Submit the form
-    });
-
-    // Handle cancel button click
-    cancelNotaButton.addEventListener('click', function() {
-        notaConfirmationDialog.style.display = 'none';
-        confirmationDialog.style.display = 'none'; // Hide dialog
-    });
+    confirmButton.addEventListener('click', () => document.querySelector('form').submit());
+    cancelButton.addEventListener('click', () => confirmationDialog.style.display = 'none');
+    confirmNotaButton.addEventListener('click', () => document.querySelector('form').submit());
+    cancelNotaButton.addEventListener('click', () => notaConfirmationDialog.style.display = 'none');
 });
 
+// REWRITTEN: Controls the new single progress bar
 function updateProgressBar() {
-    for (let i = 1; i <= totalSegments; i++) {
-        const segment = document.getElementById(`segment-${i}`);
-        if (i <= progressCount) {
-            segment.classList.add('active');
-        } else {
-            segment.classList.remove('active');
-        }
-    }
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const voteCount = document.getElementById('vote-count');
+    
+    // Calculate percentage for the fill
+    const percentage = (progressCount / totalSegments) * 100;
+    
+    // Update the width of the fill element
+    progressBarFill.style.width = `${percentage}%`;
 
-    // Update vote count
-    document.getElementById('vote-count').innerText = `${progressCount}/10`;
+    // Update the vote count text
+    voteCount.innerText = `${progressCount} / ${totalSegments} Voted`;
 }
 </script>
 {% endblock %}

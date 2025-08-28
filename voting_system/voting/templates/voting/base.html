@@ -4,52 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{% block title %}Student Council{% endblock %}</title>
+    <title>{% block title %}Student Council Elections{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome for icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 
-    <!-- Additional CSS for custom styles -->
+    <style>
+        :root {
+            --background-color: #F9FAFB;
+            --card-background: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --green-primary: #10B981;
+            --blue-accent: #3B82F6;
+        }
+
+        body {
+            font-family: 'Satoshi', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Modern Navbar Styling */
+        .main-navbar {
+            background-color: var(--card-background) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-primary) !important;
+        }
+
+        /* Make the main content area flexible */
+        .main-content {
+            flex-grow: 1;
+        }
+
+        /* Modern Footer Styling */
+        .main-footer {
+            padding: 2rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            flex-shrink: 0; /* Prevents footer from shrinking */
+        }
+    </style>
+
     {% block extra_css %}
     {% endblock %}
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <nav class="navbar navbar-expand-lg main-navbar">
         <div class="container">
-            <a class="navbar-brand" href=".">Student Council</a>
+            <a class="navbar-brand" href="{% url 'scan_qr' %}">Student Council Elections</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    
-                </ul>
+                    </ul>
             </div>
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="container mt-4">
+    <main class="main-content">
+        {# Best practice: Child templates will define their own containers (e.g., container or container-fluid) #}
         {% block content %}
-        <!-- Dynamic page content goes here -->
         {% endblock %}
-    </div>
+    </main>
 
-    <!-- Footer -->
-    <footer class="bg-light text-center text-lg-start mt-5">
-        <div class="text-center p-3">
-            © 2024 | Seshadripuram College Student Council Election 
+    <footer class="main-footer text-center">
+        <div class="container">
+            © {% now "Y" %} | Seshadripuram College Student Council Election 
         </div>
     </footer>
 
-    <!-- Bootstrap JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Additional JS for custom scripts -->
     {% block extra_js %}
     {% endblock %}
 

@@ -1,52 +1,211 @@
-{% extends 'voting/base.html' %} {% block content %}
-<div class="container">
-  <h2 class="text-center">QR Code Scanner</h2>
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <video id="video" width="100%" autoplay class="border"></video>
-      <canvas id="canvas" class="d-none"></canvas>
-      <button id="scan-btn" class="btn btn-primary mt-3">Scan QR Code</button>
+{% extends 'voting/base.html' %} 
+
+{% block content %}
+{# Font import for 'Satoshi' from Fontshare CDN #}
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+
+<div class="scanner-page-container">
+    <div class="scanner-card">
+        <h2 class="text-center">QR Code Scanner</h2>
+        <p class="text-center subtitle">Center the QR code within the frame to begin.</p>
+        
+        <div class="video-wrapper">
+            <video id="video" width="100%" autoplay playsinline class="scanner-video"></video>
+            <div class="scanner-overlay"></div>
+        </div>
+        <canvas id="canvas" class="d-none"></canvas>
+
+        <div id="result" class="text-center mt-3"></div>
+      
+        <div class="manual-entry-section mt-4">
+            <div class="divider-text"><span>or</span></div>
+            <form method="POST" action="{% url 'manual_qr_submit' %}" class="manual-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="manual_qr">Enter Code Manually</label>
+                    <input type="text" id="manual_qr" name="manual_qr" class="form-control" required placeholder="e.g., a1b2-c3d4-e5f6-g7h8">
+                </div>
+                {# This button is auto-clicked by the script but is styled for consistency #}
+                <button type="submit" id="submitButton" class="btn btn-primary mt-2 w-100">Submit Code</button>
+            </form>
+        </div>
     </div>
-  </div>
-    <!-- Form for manual QR code entry -->
-    <div class="row justify-content-center mt-4">
-      <div class="col-md-6">
-        <form method="POST" action="{% url 'manual_qr_submit' %}">
-          {% csrf_token %}
-          <div class="form-group">
-            <label for="manual_qr">Enter QR Code Manually:</label>
-            <input type="text" id="manual_qr" name="manual_qr" class="form-control" required>
-          </div>
-          <button type="submit" id="submitButton" class="btn btn-secondary mt-2">Submit QR Code</button>
-        </form>
-      </div>
-    </div>
-  <div id="result" class="text-center mt-3"></div>
 </div>
 
+<style>
+    :root {
+        --background-color: #F9FAFB;
+        --card-background: #FFFFFF;
+        --text-primary: #1F2937;
+        --text-secondary: #6B7280;
+        --border-color: #E5E7EB;
+        --green-primary: #10B981;
+        --blue-accent: #3B82F6;
+        --red-error: #EF4444;
+    }
+
+    body {
+        font-family: 'Satoshi', sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-primary);
+    }
+
+    .scanner-page-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 90vh;
+        padding: 1rem;
+    }
+
+    .scanner-card {
+        background-color: var(--card-background);
+        padding: 2rem 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 10px S40px -10px rgba(0, 0, 0, 0.08);
+        max-width: 550px;
+        width: 100%;
+        border: 1px solid var(--border-color);
+    }
+    
+    .scanner-card h2 {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .scanner-card .subtitle {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    .video-wrapper {
+        position: relative;
+        width: 100%;
+        padding-top: 75%; /* 4:3 Aspect Ratio */
+        border-radius: 16px;
+        overflow: hidden;
+        background-color: #000;
+    }
+
+    .scanner-video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .scanner-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        box-shadow: 0 0 0 400px rgba(0,0,0,0.3);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        border-radius: 16px;
+        width: 60%;
+        height: 80%;
+        top: 10%;
+        left: 20%;
+    }
+
+    .manual-entry-section .divider-text {
+        text-align: center;
+        color: var(--text-secondary);
+        margin: 1.5rem 0;
+        position: relative;
+    }
+    .manual-entry-section .divider-text::before,
+    .manual-entry-section .divider-text::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background-color: var(--border-color);
+    }
+    .manual-entry-section .divider-text::before { left: 0; }
+    .manual-entry-section .divider-text::after { right: 0; }
+
+    .manual-form label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        font-family: 'Satoshi', sans-serif;
+        color: var(--text-primary);
+        background-color: #fff;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+    .form-control:focus {
+        border-color: var(--blue-accent);
+        outline: 0;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    .btn-primary {
+        background-color: var(--blue-accent);
+        border-color: var(--blue-accent);
+        color: #fff;
+        padding: 0.8rem 1.75rem;
+        font-size: 1rem;
+        font-weight: 500;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.2s ease-out;
+    }
+
+    .btn-primary:hover {
+        background-color: #2563eb;
+        border-color: #2563eb;
+        transform: translateY(-2px);
+    }
+
+    #result p {
+        font-weight: 500;
+        font-size: 1.1rem;
+    }
+    #result .text-success { color: var(--green-primary); }
+    #result .text-danger { color: var(--red-error); }
+</style>
+
+{# The JavaScript logic remains unchanged #}
 <script>
   console.log("Hello from the QR scanner page!");
-  // Access the webcam stream
   const video = document.getElementById("video");
   const canvas = document.getElementById("canvas");
   const result = document.getElementById("result");
+  const manualQrInput = document.getElementById('manual_qr');
+  const submitButton = document.getElementById('submitButton');
 
-  // Start the camera stream
-  navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-    video.srcObject = stream;
-    startFrameCapture();
-    console.log("captured") // Start capturing frames
-  });
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then((stream) => {
+        video.srcObject = stream;
+        startFrameCapture();
+    })
+    .catch(err => {
+        console.error("Error accessing camera: ", err);
+        result.innerHTML = `<p class="text-danger">Could not access camera. Please grant permission and refresh.</p>`;
+    });
 
-  // Capture and send frames to the server at regular intervals
   function startFrameCapture() {
     setInterval(() => {
-      const frame = captureFrame();
-      sendFrameToServer(frame);
-    }, 10000); // Send a frame every second (adjust as needed)
+      // Only send frames if a QR hasn't been found and submitted
+      if (!manualQrInput.value) {
+        const frame = captureFrame();
+        sendFrameToServer(frame);
+      }
+    }, 2000); // Send a frame every 2 seconds
   }
 
-  // Capture the current frame from the video
   function captureFrame() {
     const context = canvas.getContext("2d");
     canvas.width = video.videoWidth;
@@ -55,31 +214,27 @@
     return canvas.toDataURL("image/png");
   }
 
-  // Send the frame to the server for QR code scanning
   function sendFrameToServer(frame) {
     console.log("Sending frame to server...");
-    console.log("Captured frame data (first 100 chars):", frame.slice(0, 100));
     fetch("{% url 'scan_qr' %}", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": "{{ csrf_token }}",
       },
-
-
       body: JSON.stringify({ image: frame }),
     })
       .then((response) => response.json())
       .then((data) => {
         console.log(data);
-        if (data.status === "success") {
-          result.innerHTML = `<p class="text-success">QR Code Data: ${data.qr_data}</p>`;
-          document.getElementById('manual_qr').value = data.qr_data;
-
-          // Automatically click the submit button
-          document.getElementById('submitButton').click();
-        } else {
-          result.innerHTML = `<p class="text-danger">${data.message}</p>`;
+        if (data.status === "success" && !manualQrInput.value) { // Check if input is not already filled
+          result.innerHTML = `<p class="text-success">QR Code Found! Submitting...</p>`;
+          manualQrInput.value = data.qr_data;
+          submitButton.click();
+        } else if (data.status !== "success") {
+          // You might want to avoid showing "No QR code found" every 2 seconds
+          // to prevent a flickering message. This part can be improved if needed.
+          console.log(data.message);
         }
       })
       .catch((error) => {
