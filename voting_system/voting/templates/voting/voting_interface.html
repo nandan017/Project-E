@@ -1,10 +1,13 @@
 {% extends 'voting/base.html' %}
 
 {% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
 <div class="container">
-    <h2 class="text-center my-4">Vote for 10 Candidates</h2>
+    <h2 class="text-center my-5">Vote for 10 Candidates</h2>
     
-    <!-- Segmented Progress Bar with Vote Count -->
     <div class="progress-container">
         <span id="vote-count" class="vote-count">0/10</span>
         <div class="progress-segment" id="segment-1"></div>
@@ -21,34 +24,30 @@
 
     <form method="POST" action="{% url 'voting_interface' %}">
         {% csrf_token %}
-        <div class="form-group mb-3">
+        <div class="form-group mb-4 mx-auto" style="max-width: 400px;">
             <label for="student_id" class="form-label">Student ID</label>
-            <input type="text" class="form-control" id="student_id" name="student_id" value="{{qr_code}}" disabled>
+            <input type="text" class="form-control" id="student_id" name="student_id" value="{{qr_code}}" readonly>
             <input type="hidden" name="qr_code" value="{{ qr_code }}">
         </div>
 
-        <!-- Hidden input to store selected candidate IDs -->
         <input type="hidden" name="selected_candidates" id="selected-candidates">
 
         <div class="row">
             {% for candidate in candidates %}
-            <div class="col-md-3 mb-3">
-                <div class="card candidate-card" data-candidate="{{ candidate.candidate_key }}">
-                    <img src="{{ candidate.image.url }}" class="card-img-top" alt="{{ candidate.name }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ candidate.name }}</h5>
-                        <p class="card-text">{{ candidate.forum }}</p>
+            <div class="col-md-2 col-sm-4 col-6 mb-4">
+                <div class="card candidate-card h-100 text-center" data-candidate="{{ candidate.candidate_key }}">
+                    <img src="{{ candidate.image.url }}" class="card-img-top rounded-circle mx-auto mt-3" alt="{{ candidate.name }}">
+                    <div class="card-body px-1 d-flex flex-column justify-content-center">
+                        <p class="card-title fw-medium mb-0">{{ candidate.name }}</p>
                         <input class="form-check-input candidate-radio" type="checkbox" name="candidate_ids" id="candidate_{{ candidate.pk }}" value="{{ candidate.pk }}">
-                        <span class="tick-symbol" style="display:none;">✅</span> <!-- Tick symbol -->
                     </div>
-                </div>
+                    <span class="tick-symbol" style="display:none;">✔️</span> </div>
             </div>
             {% endfor %}
         </div>
     </form>
 </div>
 
-<!-- Confirmation Dialog (Hidden by Default) -->
 <div id="confirmation-dialog" style="display: none;">
     <div class="dialog-content">
         <h4>Confirm Your Vote</h4>
@@ -61,107 +60,158 @@
 <div id="nota-confirmation-dialog" style="display: none;">
     <div class="dialog-content">
         <h4>Confirm Your Choice</h4>
-        <p>By choosing "NOTA" (None of the Above/remaining), you acknowledge that you are opting not to vote for any of the candidates/remaining candidates. Are you sure you want to proceed?</p>
+        <p>By choosing "NOTA", you acknowledge that you are opting not to vote for the remaining candidates. Are you sure?</p>
         <button id="confirm-nota" class="btn btn-warning">Yes, I Understand</button>
         <button id="cancel-nota" class="btn btn-secondary">Cancel</button>
     </div>
 </div>
 
-<!-- Styles -->
+
 <style>
-    .card {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f8f9fa;
+    }
+
+    .container h2 {
+        font-weight: 700;
+    }
+
+    /* Minimalist Card Styling */
+    .candidate-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        background-color: #fff;
+        transition: all 0.2s ease-in-out;
         cursor: pointer;
         position: relative;
+        overflow: hidden;
     }
-    .card:hover {
-        transform: translateY(-5px);
+    
+    .candidate-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+        border-color: #dee2e6;
     }
-    .card.selected {
-        border: 4px solid #28a745;
+    
+    .candidate-card.selected {
+        border-color: #28a745;
+        background-color: #f0fdf4;
     }
+    
+    /* Circular Image */
+    .candidate-card .card-img-top {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+    }
+    
+    .candidate-card .card-title {
+        font-size: 0.9rem;
+        color: #343a40;
+    }
+    
     .form-check-input {
         display: none;
     }
+    
+    /* Modern Tick Symbol */
     .tick-symbol {
         position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 20px;
-        color: #4caf50;
+        top: 8px;
+        right: 8px;
+        font-size: 1.5rem;
+        color: #28a745;
+        display: none; /* Controlled by JS */
     }
+    
+    .candidate-card.selected .tick-symbol {
+        display: block;
+    }
+    
+    /* Refined Progress Bar */
     .progress-container {
         display: flex;
         width: 100%;
-        position: fixed;
-        margin-top: 45px;
+        position: sticky;
         top: 0;
-        left: 0;
-        padding: 10px;
-        box-sizing: border-box;
-        justify-content: center;
+        padding: 15px 10px;
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(8px);
         z-index: 1000;
-        backdrop-filter: blur(10px);
+        border-bottom: 1px solid #e9ecef;
     }
+
     .progress-segment {
-        width: 10%;
-        height: 5px;
-        margin: 0 5px;
-        background-color: #ddd;
-        border-radius: 5px;
-        overflow: hidden;
+        flex-grow: 1;
+        height: 6px;
+        margin: 0 2px;
+        background-color: #e9ecef;
+        border-radius: 3px;
+        transition: background-color 0.3s ease;
     }
+
     .progress-segment.active {
-        background-color: #4caf50;
+        background-color: #28a745;
     }
+    
     .vote-count {
         position: absolute;
-        top: -25px;
-        font-size: 1.2rem;
-        font-weight: bold;
-        background-color: transparent;
-        backdrop-filter: blur(10px);
-    }
-    #confirmation-dialog {
-        position: fixed;
-        top: 50%;
+        top: -20px;
         left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        z-index: 1001; /* Ensure it's above other content */
-        display: none; /* Hidden by default */
+        transform: translateX(-50%);
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #495057;
+        background-color: #fff;
+        padding: 2px 10px;
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
     }
-    .dialog-content {
-        text-align: center;
-    }
-    #confirm-submit, #cancel-submit {
-        margin: 10px;
-    }
-    #nota-confirmation-dialog {
+    
+    /* Modern Dialog Styles */
+    #confirmation-dialog, #nota-confirmation-dialog {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none; /* Controlled by JS */
+        align-items: center;
+        justify-content: center;
         z-index: 1001;
-        display: none; /* Hidden by default */
     }
+
     .dialog-content {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
         text-align: center;
+        max-width: 400px;
+        margin: 1rem;
     }
-    #confirm-nota, #cancel-nota {
-        margin: 10px;
+
+    .dialog-content h4 {
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .dialog-content p {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+
+    .dialog-content button {
+        margin: 0 5px;
+        padding: 0.6rem 1.2rem;
+        border-radius: 8px;
+        font-weight: 500;
     }
 </style>
 
-<!-- Script -->
+
 <script>
     let progressCount = 0;
     const totalSegments = 10;
@@ -184,20 +234,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const checkbox = card.querySelector('.candidate-radio');
             const tickSymbol = card.querySelector('.tick-symbol');
             const candidateId = card.getAttribute('data-candidate');
-            console.log(candidateId);
             
             // Toggle selection
             checkbox.checked = !checkbox.checked;
-
-            // Check if NOTA is selected or deselected
-            if (candidateId === "a9aa0b36-f95e-41cc-b71b-c30b3a8f8957") {
-                if (checkbox.checked) {
-                    console.log("NOTA is selected");
-                    confirmationDialog.style.display = 'block';
-                } else {
-                    console.log("NOTA is deselected");
-                }
-            }
 
             // Update progress and UI
             if (checkbox.checked) {
@@ -205,8 +244,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectedCandidates.push(candidateId);
                     progressCount++;
                     card.classList.add('selected');
-                    tickSymbol.style.display = 'block';
-                    console.log(selectedCandidates);
                 } else {
                     alert('You can only select up to 10 candidates!');
                     checkbox.checked = false;
@@ -215,17 +252,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedCandidates = selectedCandidates.filter(id => id !== candidateId);
                 progressCount--;
                 card.classList.remove('selected');
-                tickSymbol.style.display = 'none';
             }
 
             updateProgressBar();
             selectedCandidatesInput.value = selectedCandidates.join(',');
 
-            // Show confirmation dialog if exactly 10 candidates are selected
+            // Show confirmation dialog logic
             if (selectedCandidates.length === 10) {
-                confirmationDialog.style.display = 'block';
+                confirmationDialog.style.display = 'flex';
             } else if (selectedCandidates.includes("a9aa0b36-f95e-41cc-b71b-c30b3a8f8957")) {
-                notaConfirmationDialog.style.display = 'block';
+                notaConfirmationDialog.style.display = 'flex';
             } else {
                 confirmationDialog.style.display = 'none';
             }
@@ -266,6 +302,5 @@ function updateProgressBar() {
     // Update vote count
     document.getElementById('vote-count').innerText = `${progressCount}/10`;
 }
-
 </script>
 {% endblock %}
