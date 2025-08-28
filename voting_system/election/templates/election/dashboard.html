@@ -14,7 +14,6 @@
         </div>
     </div>
 
-    <!-- Stat Cards Row -->
     <div class="row">
         <div class="col-lg-4 col-md-6 mb-4">
             <div class="stat-card">
@@ -53,7 +52,6 @@
         </div>
     </div>
 
-    <!-- Vote Count Table Card -->
     <div class="table-card">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="table-title">Live Vote Count</h2>
@@ -66,7 +64,6 @@
                 <thead>
                     <tr>
                         <th>Candidate</th>
-                        <th>Forum</th>
                         <th class="text-end">Vote Count</th>
                     </tr>
                 </thead>
@@ -74,12 +71,11 @@
                     {% for candidate, count in sorted_candidate_votes %}
                     <tr>
                         <td>{{ candidate.name }}</td>
-                        <td>{{ candidate.forum }}</td>
                         <td class="text-end fw-bold">{{ count }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="3" class="text-center py-5">No votes have been cast yet.</td>
+                        <td colspan="2" class="text-center py-5">No votes have been cast yet.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -90,7 +86,6 @@
 {% endblock %}
 
 {% block extra_css %}
-<!-- FontAwesome for icons -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
 <style>
     .dashboard-title {
